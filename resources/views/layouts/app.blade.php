@@ -12,6 +12,8 @@
      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
      <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+     <!-- SweetAlert2 -->
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         * {
             font-family: 'Inter', sans-serif;
@@ -334,16 +336,6 @@
     </nav>
 
     <main class="container py-4">
-        @if (session('status'))
-            @php $statusType = session('status_type', 'success'); @endphp
-            <div class="alert alert-{{ $statusType }} alert-dismissible fade show" role="alert">
-                {{ session('status') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        @endif
-
         @yield('content')
     </main>
 
@@ -351,6 +343,23 @@
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {{-- Show SweetAlert for Flash Messages --}}
+    @if (session('status'))
+        <script>
+            Swal.fire({
+                icon: '{{ session("status_type") === "danger" ? "error" : session("status_type", "success") }}',
+                title: '{{ session("status_type") === "success" ? "Berhasil!" : (session("status_type") === "danger" ? "Gagal!" : "Informasi") }}',
+                text: '{{ session("status") }}',
+                confirmButtonColor: '#0066FF',
+                timer: 3000,
+                timerProgressBar: true,
+            });
+        </script>
+    @endif
+
     <script>
         window.initDataTable = function (selector, extraOptions, numberingColumnIndex) {
             numberingColumnIndex = typeof numberingColumnIndex === 'number' ? numberingColumnIndex : 0;

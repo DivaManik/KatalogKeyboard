@@ -327,6 +327,18 @@
                                                        class="btn btn-warning btn-sm" title="Edit">
                                                         <i class="bi bi-pencil-square"></i>
                                                     </a>
+                                                    <button type="button" class="btn btn-danger btn-sm"
+                                                            onclick="confirmDelete({{ $keyboard->id }}, '{{ $keyboard->name }}')"
+                                                            title="Hapus">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                    <form id="delete-form-{{ $keyboard->id }}"
+                                                          action="{{ route('keyboards.destroy', $keyboard) }}"
+                                                          method="POST"
+                                                          style="display: none;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
                                                 @endif
                                             </div>
                                         </div>
@@ -343,6 +355,26 @@
 
 @push('scripts')
     <script>
+        // Confirm delete function with SweetAlert2
+        function confirmDelete(keyboardId, keyboardName) {
+            Swal.fire({
+                title: 'Hapus Keyboard?',
+                html: `Apakah Anda yakin ingin menghapus<br><strong>"${keyboardName}"</strong>?<br><br><span style="color: #dc3545;">⚠️ Data yang dihapus tidak dapat dikembalikan!</span>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-trash"></i> Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                focusCancel: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-form-' + keyboardId).submit();
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('filter-form');
             const searchInput = document.getElementById('search-input');
