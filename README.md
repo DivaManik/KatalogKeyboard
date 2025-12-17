@@ -1,85 +1,370 @@
-# Keyboard Catalogue – Documentation
+# Keyboard Catalogue – Dokumentasi Proyek
 
-> Studi kasus: setiap peserta mengembangkan web katalog keyboard yang mampu *create* dan *read* data, memakai Bootstrap, dan menerapkan template inheritance ala Laravel Blade.
+> Platform e-commerce keyboard mekanik dengan fitur admin management, user authentication, order management, dan top-up system.
 
-## 1. Tujuan dan Lingkup
-- Menyediakan katalog “KKB | Katalog Keyboard Bagus” berisi daftar keyboard mekanik.
-- Fitur inti: menambah data (create) dan menampilkan data (read) sesuai kasus pada spreadsheet peserta.
-- Tampilan menggunakan Bootstrap 4 dengan layout utama `resources/views/layouts/app.blade.php` yang diwarisi oleh seluruh halaman.
+## 📋 Daftar Isi
+- [Ringkasan Proyek](#ringkasan-proyek)
+- [Fitur Utama](#fitur-utama)
+- [Struktur Proyek](#struktur-proyek)
+- [Teknologi](#teknologi)
+- [Setup & Instalasi](#setup--instalasi)
+- [Database Schema](#database-schema)
+- [Panduan Penggunaan](#panduan-penggunaan)
 
-## 2. Arsitektur Singkat
-| Lapisan | Implementasi | Catatan |
-| --- | --- | --- |
-| Routing | `routes/web.php` | Redirect `/` → `/keyboards`, resource minimal (index/create/store/show). |
-| Controller | `app/Http/Controllers/KeyboardController.php` | Menangani CRUD dasar; data index dikirim full untuk DataTables. |
-| Model | `app/Keyboard.php` | Eloquent model + casting tipe (`price`, `hot_swappable`, `release_date`). |
-| Database | `database/migrations/2025_11_01_122850_create_keyboards_table.php` | Skema khusus keyboard (name, brand, switch, layout, connection, price, dst). |
-| Seeder & Factory | `database/seeds/KeyboardSeeder.php`, `database/factories/KeyboardFactory.php` | 1 data referensi + 40 data faker agar katalog langsung terisi. |
-| Views | `resources/views/layouts/app.blade.php`, `resources/views/keyboards/*.blade.php` | Layout Bootstrap + halaman katalog, form create, dan detail. DataTables dipakai di index. |
+---
 
-## 3. Fitur Utama
-1. **Create Keyboard**
-   - URL: `/keyboards/create`
-   - Form menampung nama, brand, jenis switch, layout, koneksi, harga, tanggal rilis, URL gambar, link pembelian, deskripsi, dan toggle hot-swappable.
-   - Validasi dijalankan di `KeyboardController@store` (required, format URL, batas angka, dsb).
-   - Data tersimpan via `Keyboard::create()` lalu redirect ke daftar dengan flash message.
+## 📌 Ringkasan Proyek
 
-2. **Read Keyboard**
-   - **Daftar** (`/keyboards`): menampilkan semua entri menggunakan DataTables (search, sort, paging). Kolom “No.” memberi urutan otomatis di klien.
-   - **Detail** (`/keyboards/{keyboard}`): menampilkan info lengkap + deskripsi dengan `white-space: pre-line` sehingga teks panjang tetap rapi.
+**Keyboard Katalog** adalah aplikasi web Laravel yang menyediakan katalog keyboard mekanik lengkap dengan sistem e-commerce. Pengguna dapat browsing keyboard, melakukan pembelian dengan sistem balance, dan admin dapat mengelola inventory, pesanan, serta top-up request dari pengguna.
 
-3. **Template Inheritance & Bootstrap**
-   - Layout utama sudah memuat CDN Bootstrap + space untuk custom CSS/JS (`@stack('styles'|'scripts')`).
-   - Navbar, alert flash, dan script delegasi klik baris disediakan sekali di layout; halaman turunan hanya fokus pada konten masing-masing.
+### Target Users
+- **Admin**: Mengelola katalog keyboard, menerima/menolak top-up, tracking order
+- **Guest (Pembeli)**: Browsing keyboard, membeli dengan saldo, request top-up saldo
+- **Visitor**: Melihat katalog tanpa harus login
 
-## 4. Alur Kerja Teknis
-1. **Instal dependensi**  
+---
+
+## ✨ Fitur Utama
+
+### 🔐 Autentikasi & Profil
+- Registrasi dan login pengguna
+- Update profil (nama, email, foto, alamat)
+- Ubah password
+- Sistem role (Admin/Guest)
+
+### 🛒 Katalog & Pembelian
+- **Browsing Keyboard**: Filter by brand, connection, layout, price range
+- **Detail Produk**: Informasi lengkap + zoom hover pada gambar
+- **Pembelian**: Dengan sistem balance/saldo pengguna
+- **Tracking Stok**: Real-time stock availability
+
+### 👨‍💼 Admin Management
+- **Keyboard Management**: CRUD keyboard dengan upload gambar
+- **Order Management**: Lihat semua order, update status (Pending → Processing → Shipped → Delivered)
+- **User Management**: Kelola daftar user, hapus user
+- **Top-Up Management**: Approve/reject request top-up dari user
+
+### 💳 Top-Up & Balance
+- User dapat request top-up saldo
+- Admin dapat approve/reject request
+- Track riwayat top-up
+
+### 📦 Order Management
+- User dapat tracking pesanan
+- Admin dapat update status order
+- Notifikasi status perubahan
+- Disable update button untuk order yang sudah delivered/cancelled
+
+---
+
+## 📁 Struktur Proyek
+
+```
+KeyboardKatalaog/
+├── app/
+│   ├── Keyboard.php              # Model Keyboard
+│   ├── User.php                  # Model User
+│   ├── Order.php                 # Model Order
+│   ├── TopUp.php                 # Model TopUp
+│   ├── Notification.php          # Model Notification
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── KeyboardController.php
+│   │   │   ├── UserController.php
+│   │   │   ├── OrderController.php
+│   │   │   ├── TopUpController.php
+│   │   │   ├── VisitorController.php
+│   │   │   └── NotificationController.php
+│   │   ├── Kernel.php
+│   │   └── Middleware/
+│   │       └── AdminMiddleware.php
+│   ├── Console/
+│   │   └── Kernel.php
+│   ├── Exceptions/
+│   │   └── Handler.php
+│   └── Providers/
+│       ├── AppServiceProvider.php
+│       ├── AuthServiceProvider.php
+│       ├── BroadcastServiceProvider.php
+│       ├── EventServiceProvider.php
+│       └── RouteServiceProvider.php
+├── database/
+│   ├── migrations/
+│   │   ├── 2014_10_12_000000_create_users_table.php
+│   │   ├── 2025_11_01_122850_create_keyboards_table.php
+│   │   ├── 2025_12_15_143814_add_role_to_users_table.php
+│   │   ├── 2025_12_15_194523_add_balance_and_address_to_users_table.php
+│   │   ├── 2025_12_15_194536_create_topups_table.php
+│   │   ├── 2025_12_15_194545_create_orders_table.php
+│   │   ├── 2025_12_15_194551_create_notifications_table.php
+│   │   └── 2025_12_17_121014_add_stock_to_keyboards_table.php
+│   ├── factories/
+│   │   ├── KeyboardFactory.php
+│   │   └── UserFactory.php
+│   └── seeds/
+│       ├── DatabaseSeeder.php
+│       ├── KeyboardSeeder.php
+│       └── UserSeeder.php
+├── resources/
+│   ├── views/
+│   │   ├── layouts/
+│   │   │   └── app.blade.php
+│   │   ├── auth/
+│   │   │   ├── login.blade.php
+│   │   │   └── register.blade.php
+│   │   ├── keyboards/
+│   │   │   ├── index.blade.php
+│   │   │   ├── create.blade.php
+│   │   │   ├── edit.blade.php
+│   │   │   └── show.blade.php
+│   │   ├── orders/
+│   │   │   ├── index.blade.php
+│   │   │   ├── admin-index.blade.php
+│   │   │   └── show.blade.php
+│   │   ├── topups/
+│   │   │   ├── index.blade.php
+│   │   │   ├── create.blade.php
+│   │   │   └── admin-index.blade.php
+│   │   ├── users/
+│   │   │   └── index.blade.php
+│   │   ├── profile/
+│   │   │   ├── edit.blade.php
+│   │   │   └── password.blade.php
+│   │   └── home.blade.php
+│   ├── js/
+│   └── sass/
+├── routes/
+│   ├── web.php
+│   ├── api.php
+│   ├── channels.php
+│   └── console.php
+├── storage/
+│   ├── app/
+│   └── logs/
+├── tests/
+│   ├── Feature/
+│   └── Unit/
+├── public/
+│   ├── css/
+│   ├── js/
+│   ├── images/
+│   └── storage/ (symlink)
+├── config/
+├── bootstrap/
+├── vendor/
+├── .env.example
+├── artisan
+├── composer.json
+├── package.json
+└── README.md
+```
+
+---
+
+## 🛠 Teknologi
+
+| Komponen | Teknologi | Versi |
+|----------|-----------|-------|
+| Backend | Laravel | 7.x |
+| Frontend | Bootstrap | 4.5 |
+| Database | MySQL | 5.7+ |
+| PHP | PHP | 7.4+ |
+| JavaScript | jQuery + DataTables | - |
+| Icons | Bootstrap Icons | 1.x |
+
+---
+
+## 🚀 Setup & Instalasi
+
+### Prasyarat
+- PHP 7.4+
+- MySQL 5.7+
+- Composer
+- Node.js & NPM
+
+### Langkah Instalasi
+
+1. **Clone Repository**
+   ```bash
+   git clone <repository-url>
+   cd KeyboardKatalaog
+   ```
+
+2. **Install Dependencies**
    ```bash
    composer install
-   npm install && npm run dev   # opsional jika ingin mengompilasi asset sendiri
+   npm install
+   npm run dev
    ```
-2. **Setel env** – salin `.env.example`, isi koneksi database MySQL (aplikasi default memakai `loker_db`).
-3. **Migrasi & Seed**  
+
+3. **Setup Environment**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+4. **Konfigurasi Database**
+   - Edit `.env` dan atur koneksi MySQL
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=keyboard_katalog
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+
+5. **Migrasi & Seed Database**
    ```bash
    php artisan migrate:fresh --seed
    ```
-   Perintah ini menciptakan tabel `keyboards` dan mengisi 41 data contoh.
-4. **Jalankan aplikasi**  
+
+6. **Create Storage Link**
+   ```bash
+   php artisan storage:link
+   ```
+
+7. **Jalankan Server**
    ```bash
    php artisan serve
    ```
-   Buka `http://127.0.0.1:8000/keyboards` untuk melihat katalog.
+   Buka `http://127.0.0.1:8000`
 
-## 5. Struktur Data Keyboard
-| Kolom | Tipe | Keterangan |
-| --- | --- | --- |
-| `name`, `brand` | string | Nama keyboard & brand (wajib). |
-| `switch_type`, `layout` | string nullable | Info switch & layout (misal “Gateron Brown”, “75%”). |
-| `connection` | enum (`wired`, `wireless`, `hybrid`) | Default `wired`. |
-| `hot_swappable` | boolean | Checkbox di form, default `false`. |
-| `price` | integer nullable | Disimpan dalam Rupiah. |
-| `release_date` | date nullable | Digunakan untuk menampilkan timeline produk. |
-| `description` | text | Wajib, ditampilkan dengan `nl2br`. |
-| `image_url`, `buy_link` | string nullable | Untuk foto dan tautan pembelian. |
-| `timestamps` | otomatis | Audit data. |
-
-## 6. Frontend Notes
-- **DataTables**: CDN `https://cdn.datatables.net/1.13.8` untuk CSS & JS. Konfigurasi di `resources/views/keyboards/index.blade.php` mengatur bahasa Indonesia, pagination, dan nomor urut.
-- **Interaksi baris**: Layout memiliki script delegasi klik sehingga klik di area `<tr data-row-link>` membuka halaman detail tanpa berkonflik dengan DataTables.
-- **Deskripsi panjang**: kelas `.product-description` menerapkan `word-break` & `overflow-wrap` agar teks tanpa spasi tetap turun ke bawah.
-
-## 7. Pengujian Manual
-1. Jalankan `php artisan serve`.
-2. Kunjungi `/keyboards` → pastikan DataTables menampilkan data, fitur cari/sort berfungsi.
-3. Klik baris untuk memastikan menuju halaman detail.
-4. Klik “+ Tambah Keyboard”, isi form valid & tidak valid untuk memverifikasi validasi server.
-5. Setelah submit sukses, pastikan entri tampil di DataTables (gunakan search).
-
-## 8. Ekstensi yang Direkomendasikan
-- Tambahkan fitur edit & delete untuk melengkapi CRUD.
-- Gunakan Storage/Laravel Filesystem bila ingin upload gambar ketimbang URL.
-- Integrasi autentikasi jika katalog hanya boleh diakses peserta tertentu.
-- Tambah filter tambahan (misal by layout) melalui DataTables custom dropdown jika spreadsheet menuntut analisa tertentu.
+### Akun Demo
+- **Admin**: `admin@example.com` / `password`
+- **Guest**: `user@example.com` / `password`
 
 ---
-Dokumentasi ini merangkum apa yang dibangun untuk memenuhi permintaan “create & read data” dengan Bootstrap dan template inheritance. Silakan jadikan catatan saat mengisi laporan atau mempresentasikan hasil studi kasus.*** End Patch
+
+## 🗄 Database Schema
+
+### Tabel Users
+```sql
+id, name, email, password, role (admin/guest), foto, alamat, balance, created_at, updated_at
+```
+
+### Tabel Keyboards
+```sql
+id, name, brand, switch_type, layout, connection, price, stock, 
+release_date, image_url, hot_swappable, description, created_at, updated_at
+```
+
+### Tabel Orders
+```sql
+id, user_id, keyboard_id, quantity, total_price, status, notes, created_at, updated_at
+```
+
+### Tabel TopUps
+```sql
+id, user_id, amount, status (pending/approved/rejected), created_at, updated_at
+```
+
+### Tabel Notifications
+```sql
+id, user_id, type, message, read_at, created_at, updated_at
+```
+
+---
+
+## 📖 Panduan Penggunaan
+
+### Untuk Admin
+
+1. **Kelola Keyboard**
+   - Login sebagai admin
+   - Navigasi ke `/keyboards`
+   - Klik "+ Tambah Keyboard" untuk menambah produk baru
+   - Edit atau hapus keyboard dari list
+
+2. **Kelola Pesanan**
+   - Navigasi ke `/admin/orders`
+   - Lihat semua order dari customer
+   - Update status order: Pending → Processing → Shipped → In Distribution → Delivered
+   - Tombol update akan disable untuk order yang sudah delivered/cancelled
+
+3. **Kelola Top-Up**
+   - Navigasi ke `/admin/topups`
+   - Review request top-up dari user
+   - Approve atau reject request
+
+4. **Kelola User**
+   - Navigasi ke `/users`
+   - Lihat daftar semua user
+   - Hapus user jika perlu
+
+### Untuk Guest (Pengguna)
+
+1. **Registrasi & Login**
+   - Klik Register untuk membuat akun baru
+   - Login dengan email dan password
+
+2. **Browse Keyboard**
+   - Di halaman katalog, gunakan filter untuk mencari keyboard
+   - Filter by: Brand, Connection, Layout, Price Range
+   - Klik keyboard untuk lihat detail lengkap
+
+3. **Beli Keyboard**
+   - Pilih keyboard
+   - Tentukan jumlah
+   - Klik "Beli Sekarang"
+   - Saldo akan berkurang sesuai total harga
+
+4. **Request Top-Up**
+   - Navigasi ke `/topups`
+   - Klik "Request Top-Up"
+   - Masukkan jumlah saldo yang ingin ditambah
+   - Tunggu approval dari admin
+
+5. **Tracking Pesanan**
+   - Navigasi ke `/orders`
+   - Lihat status semua pesanan Anda
+   - Lihat detail pesanan dengan klik order number
+
+---
+
+## 🎨 Fitur UI/UX
+
+- **Image Zoom**: Hover pada gambar keyboard untuk zoom 1.5x
+- **Responsive Design**: Optimized untuk mobile, tablet, dan desktop
+- **Data Tables**: Search, sort, dan pagination untuk list keyboard & order
+- **Flash Messages**: Notifikasi sukses/error setelah aksi
+- **Form Validation**: Server-side validation dengan error messages
+
+---
+
+## 📝 Format Penamaan File
+
+- **Controller**: `{Entity}Controller.php` (contoh: `KeyboardController.php`)
+- **Model**: `{Entity}.php` (contoh: `Keyboard.php`)
+- **View**: `{entity}/{action}.blade.php` (contoh: `keyboards/index.blade.php`)
+- **Migration**: `{YYYY_MM_DD_HHMMSS}_{description}.php`
+- **Route**: Gunakan resource routes atau named routes
+
+---
+
+## 🔒 Middleware & Authorization
+
+- **Admin Middleware**: Hanya admin yang bisa akses `/keyboards/create`, `/admin/orders`, dll
+- **Auth Middleware**: Hanya user yang login bisa akses `/orders`, `/topups`
+- **Guest Middleware**: Hanya user yang belum login bisa akses `/login`, `/register`
+
+---
+
+## 🐛 Troubleshooting
+
+| Masalah | Solusi |
+|---------|--------|
+| "Column not found" error | Jalankan `php artisan migrate:fresh --seed` |
+| Gambar tidak tampil | Jalankan `php artisan storage:link` |
+| 404 Not Found | Pastikan route sudah didefinisikan di `routes/web.php` |
+| Permission denied | Ubah permission folder storage: `chmod -R 755 storage/` |
+
+---
+
+## 📧 Kontak & Support
+
+Untuk pertanyaan atau bug report, silakan hubungi team developer.
+
+---
+
+**Last Updated**: December 17, 2025
