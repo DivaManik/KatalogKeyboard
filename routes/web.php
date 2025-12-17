@@ -80,4 +80,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/topups', 'TopUpController@index')->name('topups.index');
     Route::get('/topups/create', 'TopUpController@create')->name('topups.create');
     Route::post('/topups', 'TopUpController@store')->name('topups.store');
+
+    // Notifications
+    Route::get('/notifications', 'NotificationController@index')->name('notifications.index');
+    Route::get('/notifications/get', 'NotificationController@getNotifications')->name('notifications.get');
+    Route::post('/notifications/{id}/read', 'NotificationController@markAsRead')->name('notifications.read');
+    Route::post('/notifications/read-all', 'NotificationController@markAllAsRead')->name('notifications.readAll');
 });

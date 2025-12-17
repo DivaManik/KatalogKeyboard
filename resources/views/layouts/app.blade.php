@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'KKB | Katalog Keyboard Bagus')</title>
     <!-- Bootstrap Offline -->
     <!-- <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}"> -->
@@ -96,6 +97,116 @@
             color: #0066FF !important;
             font-weight: 600;
         }
+
+        /* Notification Styles */
+        .notification-bell-toggle {
+            font-size: 1.5rem;
+            color: #374151 !important;
+            transition: color 0.3s;
+        }
+        .notification-bell-toggle:hover {
+            color: #0066FF !important;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            min-width: 18px;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .notification-dropdown {
+            min-width: 380px;
+            max-width: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: none;
+            margin-top: 0.5rem;
+        }
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #f0f2f5;
+            background: #f8f9fa;
+        }
+        .notification-header h6 {
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .notification-item {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid #f0f2f5;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+        .notification-item.unread {
+            background: #e3f2fd;
+        }
+        .notification-item.unread:hover {
+            background: #bbdefb;
+        }
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .notification-icon.order {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .notification-icon.topup {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .notification-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #1a1a2e;
+            margin-bottom: 0.25rem;
+        }
+        .notification-message {
+            font-size: 0.8rem;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+        .notification-time {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+        .notification-footer {
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-top: 1px solid #f0f2f5;
+        }
+        .notification-empty {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: #9ca3af;
+        }
     </style>
     @stack('styles')
 </head>
@@ -143,7 +254,38 @@
                 </div>
 
                 {{-- User Profile (Right Side) --}}
-                <div class="navbar-nav ml-auto">
+                <div class="navbar-nav ml-auto d-flex align-items-center">
+                    {{-- Notifications Bell --}}
+                    <div class="dropdown mr-3">
+                        @if(auth()->check() && auth()->user()->isGuest())
+                        <button class="btn btn-link p-0 notification-bell-toggle position-relative" type="button" id="notificationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="bi bi-bell-fill"></i>
+                            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                        </button>
+                        @endif
+                        
+                        <div class="dropdown-menu dropdown-menu-right notification-dropdown shadow" aria-labelledby="notificationDropdown">
+                            <div class="notification-header">
+                                <h6 class="mb-0">Notifikasi</h6>
+                                <button class="btn btn-link btn-sm p-0 text-primary" id="markAllReadBtn">
+                                    <small>Tandai semua dibaca</small>
+                                </button>
+                            </div>
+                            <div class="notification-list" id="notificationList">
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox"></i>
+                                    <p class="mb-0 small">Memuat notifikasi...</p>
+                                </div>
+                            </div>
+                            <div class="notification-footer">
+                                <a href="{{ route('notifications.index') }}" class="btn btn-link btn-sm btn-block">
+                                    Lihat Semua Notifikasi
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- User Profile --}}
                     <div class="dropdown d-flex align-items-center">
                         <button class="btn btn-link p-0 user-menu-toggle d-flex align-items-center" type="button" id="userMenuDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             @if(Auth::user()->foto)
@@ -276,6 +418,141 @@
             });
         });
     </script>
+
+    {{-- Notification Script --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load notifications when page loads
+            loadNotifications();
+
+            // Reload notifications every 30 seconds
+            setInterval(loadNotifications, 30000);
+
+            // Load notifications when dropdown is opened
+            $('#notificationDropdown').on('show.bs.dropdown', function () {
+                loadNotifications();
+            });
+
+            // Mark all as read button
+            $('#markAllReadBtn').on('click', function(e) {
+                e.preventDefault();
+                markAllAsRead();
+            });
+        });
+
+        function loadNotifications() {
+            fetch('{{ route("notifications.get") }}')
+                .then(response => response.json())
+                .then(data => {
+                    updateNotificationBadge(data.unread_count);
+                    renderNotifications(data.notifications);
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                });
+        }
+
+        function updateNotificationBadge(count) {
+            const badge = document.getElementById('notificationBadge');
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function renderNotifications(notifications) {
+            const container = document.getElementById('notificationList');
+
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="notification-empty">
+                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                        <p class="mb-0 mt-2">Tidak ada notifikasi</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(notification => {
+                const isUnread = !notification.is_read;
+                const iconClass = notification.type.includes('order') ? 'order' : 'topup';
+                const icon = notification.type.includes('order') ? 'bi-box-seam' : 'bi-cash-stack';
+                const timeAgo = formatTimeAgo(notification.created_at);
+
+                return `
+                    <div class="notification-item ${isUnread ? 'unread' : ''}"
+                         onclick="markNotificationAsRead(${notification.id})"
+                         data-notification-id="${notification.id}">
+                        <div class="d-flex">
+                            <div class="notification-icon ${iconClass}">
+                                <i class="bi ${icon}"></i>
+                            </div>
+                            <div class="flex-grow-1 ml-3">
+                                <div class="notification-title">${notification.title}</div>
+                                <div class="notification-message">${notification.message}</div>
+                                <div class="notification-time">${timeAgo}</div>
+                            </div>
+                            ${isUnread ? '<div class="ml-2"><span class="badge badge-primary badge-pill">Baru</span></div>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function markNotificationAsRead(notificationId) {
+            fetch(`/notifications/${notificationId}/read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                }
+            })
+            .catch(error => {
+                console.error('Error marking notification as read:', error);
+            });
+        }
+
+        function markAllAsRead() {
+            fetch('{{ route("notifications.readAll") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                }
+            })
+            .catch(error => {
+                console.error('Error marking all as read:', error);
+            });
+        }
+
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            if (seconds < 60) return 'Baru saja';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' menit yang lalu';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' jam yang lalu';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + ' hari yang lalu';
+
+            return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+    </script>
+
     @stack('scripts')
 </body>
 </html>
