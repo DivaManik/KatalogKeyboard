@@ -165,7 +165,7 @@ KeyboardKatalaog/
 
 | Komponen | Teknologi | Versi |
 |----------|-----------|-------|
-| Backend | Laravel | 7.x |
+| Backend | Laravel | 6.x |
 | Frontend | Bootstrap | 4.5 |
 | Database | MySQL | 5.7+ |
 | PHP | PHP | 7.4+ |
@@ -180,7 +180,7 @@ KeyboardKatalaog/
 - PHP 7.4+
 - MySQL 5.7+
 - Composer
-- Node.js & NPM
+
 
 ### Langkah Instalasi
 
@@ -361,10 +361,5 @@ id, user_id, type, message, read_at, created_at, updated_at
 
 ---
 
-## 📧 Kontak & Support
-
-Untuk pertanyaan atau bug report, silakan hubungi team developer.
-
----
 
 **Last Updated**: December 17, 2025
