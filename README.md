@@ -257,7 +257,6 @@ KeyboardKatalaog/
 ### Akun Demo
 Setelah seeding, gunakan akun berikut:
 - **Admin**: `admin@example.com` / `password`
-- **Guest**: `user@example.com` / `password`
 
 ---
 
