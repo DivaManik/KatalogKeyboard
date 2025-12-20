@@ -3,7 +3,7 @@
 /public/storage
 /storage/*.key
 /vendor
-/.claude
+E:\Laravel\KeyboardKatalaog\.claude
 .env
 .env.backup
 .phpunit.result.cache
