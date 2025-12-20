@@ -276,6 +276,5 @@ class KeyboardController extends Controller
             ->with('status_type', 'success');
     }
 
-    
 
 }

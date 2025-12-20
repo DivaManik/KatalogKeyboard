@@ -82,7 +82,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-custom @yield('navbar-class')">
         <div class="container">
-            <a class="navbar-brand navbar-brand-custom" href="{{ route('home') }}">
+            <a class="navbar-brand navbar-brand-custom" href="{{ route('search.view') }}">
                 <i class="bi bi-keyboard-fill"></i> KKB
             </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
