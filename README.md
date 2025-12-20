@@ -515,19 +515,6 @@ isGuest() → return $this->role === 'guest'
 
 ---
 
-## 🎯 Future Improvements
-
-- [ ] Wishlist functionality
-- [ ] Product reviews & ratings
-- [ ] Email notifications
-- [ ] Payment gateway integration
-- [ ] Export orders to Excel/PDF
-- [ ] Advanced analytics dashboard
-- [ ] Multi-language support
-- [ ] API authentication (Laravel Passport)
-- [ ] Real-time notifications (Laravel Echo + WebSocket)
-
----
 
 ## 📝 Changelog
 
@@ -554,15 +541,9 @@ isGuest() → return $this->role === 'guest'
 
 ## 👥 Contributors
 
-- **Developer**: [Your Name]
+- **Developer**: Diva Filemon Manik
 - **Framework**: Laravel Team
 - **UI Design**: Bootstrap Team
-
----
-
-## 📄 License
-
-This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
 ---
 
