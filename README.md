@@ -152,7 +152,6 @@ KeyboardKatalaog/
 │   └── sass/
 ├── routes/
 │   ├── web.php      # Web routes dengan middleware groups
-│   ├── api.php      # API routes (keyboard API endpoint)
 │   ├── channels.php
 │   └── console.php
 ├── storage/
@@ -482,7 +481,6 @@ is_read (boolean), created_at, updated_at
 
 **Route Groups:**
 - `web`: Session, CSRF, cookie encryption
-- `api`: Throttle, stateless
 
 **Custom Middleware:**
 - `auth`: Authentication check → redirect ke login jika belum login
@@ -499,16 +497,6 @@ isGuest() → return $this->role === 'guest'
 @if(auth()->user()->isAdmin())
     <!-- Admin content -->
 @endif
-```
-
----
-
-## 📊 API Endpoints
-
-### Public API
-```
-GET /api/v1/api-keyboards/keyboards
-Response: JSON list of all keyboards
 ```
 
 ---
